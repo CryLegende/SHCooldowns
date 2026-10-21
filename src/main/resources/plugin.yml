@@ -1,0 +1,24 @@
+name: SHCooldowns
+version: '${project.version}'
+main: org.Cry_Legende.sHCooldowns.SHCooldowns
+api-version: '1.20'
+author: Cry_Legende
+softdepend: [PlaceholderAPI] # Dépendance optionnelle
+
+commands:
+  shcooldowns:
+    description: Commandes administratives pour SHCooldowns.
+    usage: /shcooldowns reload
+    aliases: [shc]
+    permission: shcooldowns.admin
+
+permissions:
+  shcooldowns.admin:
+    description: Permet d'utiliser les commandes de gestion SHCooldowns.
+    default: op
+  shcooldowns.bypass.<cooldown_id>: # Ex: shcooldowns.bypass.repair
+    description: Permet de contourner un cooldown spécifique (utiliser l'id du config).
+    default: false
+  shcooldowns.bypass.all:
+    description: Permet de contourner tous les cooldowns SHCooldowns.
+    default: false
