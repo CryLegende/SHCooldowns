@@ -37,6 +37,12 @@ public final class SHCooldowns extends JavaPlugin {
         cooldownManager = new CooldownManager(this); // Passer "this" au constructeur
         cooldownManager.loadCooldowns(cooldownsDataFile); // Charger les cooldowns persistants
 
+        // Toutes les 5 minutes : purge des cooldowns expirés et sauvegarde (un arrêt brutal ne perd plus les cooldowns en cours)
+        getServer().getScheduler().runTaskTimerAsynchronously(this, () -> {
+            cooldownManager.cleanupExpiredCooldowns();
+            cooldownManager.saveCooldowns(cooldownsDataFile, true);
+        }, 6000L, 6000L);
+
         // Enregistrer les listeners
         getServer().getPluginManager().registerEvents(new PlayerCommandListener(this, configManager, cooldownManager), this);
 

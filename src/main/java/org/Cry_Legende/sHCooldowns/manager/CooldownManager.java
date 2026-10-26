@@ -7,6 +7,7 @@ import org.Cry_Legende.sHCooldowns.SHCooldowns; // Importer la classe principale
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -34,11 +35,14 @@ public class CooldownManager {
         if (durationMillis <= 0) return; // Ne pas mettre de cooldown négatif ou nul
 
         long expiryTime = System.currentTimeMillis() + durationMillis;
-        String idLower = cooldownId.toLowerCase(); // Utiliser ID en minuscule comme clé
+        String idLower = cooldownId.toLowerCase(Locale.ROOT); // Utiliser ID en minuscule comme clé
 
-        // Récupère la map des cooldowns du joueur, ou en crée une nouvelle si elle n'existe pas
-        activeCooldowns.computeIfAbsent(playerUUID, k -> new ConcurrentHashMap<>())
-            .put(idLower, expiryTime);
+        // Atomique par joueur : une purge concurrente (placeholder asynchrone) ne peut pas jeter la map qu'on remplit
+        activeCooldowns.compute(playerUUID, (k, map) -> {
+            if (map == null) map = new ConcurrentHashMap<>();
+            map.put(idLower, expiryTime);
+            return map;
+        });
     }
 
     /**
@@ -60,7 +64,7 @@ public class CooldownManager {
      * @return Le temps restant en millisecondes, ou 0 si pas en cooldown ou expiré.
      */
     public long getRemainingCooldown(UUID playerUUID, String cooldownId) {
-        String idLower = cooldownId.toLowerCase();
+        String idLower = cooldownId.toLowerCase(Locale.ROOT);
         Map<String, Long> playerCooldowns = activeCooldowns.get(playerUUID);
 
         if (playerCooldowns != null) {
@@ -69,7 +73,7 @@ public class CooldownManager {
                 long remaining = expiryTime - System.currentTimeMillis();
                 if (remaining <= 0) {
                     // Cooldown expiré, le nettoyer
-                    removeCooldown(playerUUID, idLower);
+                    removeCooldown(playerUUID, idLower, expiryTime);
                     return 0;
                 }
                 return remaining;
@@ -80,31 +84,30 @@ public class CooldownManager {
 
     /**
      * Supprime un cooldown spécifique pour un joueur (utilisé quand le temps est écoulé).
+     * Seulement si l'échéance est toujours celle qu'on a lue : un cooldown reposé entre-temps est conservé.
      *
      * @param playerUUID UUID du joueur.
      * @param cooldownId L'identifiant unique du groupe de cooldown.
+     * @param expiry     Échéance lue, expirée.
      */
-    private void removeCooldown(UUID playerUUID, String cooldownId) {
-        String idLower = cooldownId.toLowerCase();
-        Map<String, Long> playerCooldowns = activeCooldowns.get(playerUUID);
-        if (playerCooldowns != null) {
-            playerCooldowns.remove(idLower);
-            // Si le joueur n'a plus aucun cooldown, on peut supprimer son entrée de la map principale
-            if (playerCooldowns.isEmpty()) {
-                activeCooldowns.remove(playerUUID);
-            }
-        }
+    private void removeCooldown(UUID playerUUID, String cooldownId, long expiry) {
+        String idLower = cooldownId.toLowerCase(Locale.ROOT);
+        activeCooldowns.computeIfPresent(playerUUID, (k, map) -> {
+            map.remove(idLower, expiry);
+            // Si le joueur n'a plus aucun cooldown, on supprime son entrée de la map principale
+            return map.isEmpty() ? null : map;
+        });
     }
 
-    // Optionnel: Méthode pour nettoyer tous les cooldowns expirés (peut être appelée périodiquement)
+    // Purge des cooldowns expirés : les joueurs hors ligne ne repassent jamais par getRemainingCooldown
     public void cleanupExpiredCooldowns() {
         long now = System.currentTimeMillis();
-        activeCooldowns.forEach((uuid, playerMap) -> {
-            playerMap.entrySet().removeIf(entry -> entry.getValue() <= now);
-            if (playerMap.isEmpty()) {
-                activeCooldowns.remove(uuid);
-            }
-        });
+        for (UUID uuid : activeCooldowns.keySet()) {
+            activeCooldowns.computeIfPresent(uuid, (k, map) -> {
+                map.values().removeIf(expiry -> expiry <= now);
+                return map.isEmpty() ? null : map;
+            });
+        }
     }
 
     /**
@@ -112,7 +115,14 @@ public class CooldownManager {
      *
      * @param dataFile Le fichier où sauvegarder les données.
      */
-    public void saveCooldowns(File dataFile) {
+    public synchronized void saveCooldowns(File dataFile) {
+        saveCooldowns(dataFile, false);
+    }
+
+    /**
+     * @param quiet pas de message en console (sauvegarde périodique)
+     */
+    public synchronized void saveCooldowns(File dataFile, boolean quiet) {
         YamlConfiguration cooldownsConfig = new YamlConfiguration();
         int savedCount = 0;
         long currentTime = System.currentTimeMillis();
@@ -142,12 +152,12 @@ public class CooldownManager {
         if (savedCount > 0) {
             try {
                 cooldownsConfig.save(dataFile);
-                plugin.getLogger().info("Sauvegardé " + savedCount + " cooldown(s) actif(s) dans " + dataFile.getName());
+                if (!quiet) plugin.getLogger().info("Sauvegardé " + savedCount + " cooldown(s) actif(s) dans " + dataFile.getName());
             } catch (IOException e) {
                 plugin.getLogger().log(Level.SEVERE, "Impossible de sauvegarder les cooldowns dans " + dataFile.getName(), e);
             }
         } else {
-            plugin.getLogger().info("Aucun cooldown actif à sauvegarder.");
+            if (!quiet) plugin.getLogger().info("Aucun cooldown actif à sauvegarder.");
             // Si le fichier existe et est vide, on peut le supprimer pour nettoyer
             if (dataFile.exists() && dataFile.length() == 0) {
                 dataFile.delete();
@@ -187,7 +197,7 @@ public class CooldownManager {
                     long expiryTime = cooldownsConfig.getLong(playerUUIDString + "." + cooldownId);
 
                     if (expiryTime > currentTime) { // Ne charge que les cooldowns encore valides
-                        playerLoadedCooldowns.put(cooldownId.toLowerCase(), expiryTime);
+                        playerLoadedCooldowns.put(cooldownId.toLowerCase(Locale.ROOT), expiryTime);
                         loadedCount++;
                     } else {
                         expiredCount++;

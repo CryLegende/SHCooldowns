@@ -56,7 +56,8 @@ public class PlayerCommandListener implements Listener {
         List<CooldownEntry> potentialEntries = configManager.findPotentialCooldownEntries(commandToCheck);
 
         if (potentialEntries.isEmpty()) {
-            plugin.getLogger().finest("Aucune règle de cooldown trouvée pour '" + commandLine + "', ignoré.");
+            final String line = commandLine;
+            plugin.getLogger().finest(() -> "Aucune règle de cooldown trouvée pour '" + line + "', ignoré.");
             return; // Aucune règle de cooldown pour cette commande
         }
 

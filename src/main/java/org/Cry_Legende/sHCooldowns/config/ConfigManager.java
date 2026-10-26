@@ -8,6 +8,7 @@ import org.bukkit.configuration.file.FileConfiguration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -25,8 +26,8 @@ public class ConfigManager {
 
     // Stocke toutes les entrées de cooldown, peu importe la permission
     private final Map<String, List<CooldownEntry>> cooldownGroups = new HashMap<>();
-    // Stocke les aliases normalisés (lowercase)
-    private final Map<String, String> aliases = new HashMap<>();
+    // Stocke les aliases normalisés (lowercase), dans l'ordre de chargement : les plus longs d'abord (voir loadConfig)
+    private final Map<String, String> aliases = new LinkedHashMap<>();
 
     public ConfigManager(SHCooldowns plugin) {
         this.plugin = plugin;
