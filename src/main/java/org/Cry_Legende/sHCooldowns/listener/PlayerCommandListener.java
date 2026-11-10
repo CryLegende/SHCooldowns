@@ -4,6 +4,7 @@ import org.Cry_Legende.sHCooldowns.SHCooldowns;
 import org.Cry_Legende.sHCooldowns.config.ConfigManager;
 import org.Cry_Legende.sHCooldowns.config.CooldownEntry;
 import org.Cry_Legende.sHCooldowns.manager.CooldownManager;
+import org.Cry_Legende.sHCooldowns.network.NetworkCooldowns;
 import org.Cry_Legende.sHCooldowns.util.FormatUtil;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -104,6 +105,14 @@ public class PlayerCommandListener implements Listener {
         // Vérifier le bypass spécifique au groupe de cooldown
         if (player.hasPermission("shcooldowns.bypass." + cooldownId)) {
             plugin.getLogger().finer(player.getName() + " a la permission bypass." + cooldownId + ", cooldown ignoré.");
+            return;
+        }
+
+        // Mode réseau : ses cooldowns de la base ne sont pas encore chargés, on ne le laisse pas passer devant
+        NetworkCooldowns network = plugin.getNetwork();
+        if (network != null && network.isLoading(playerUUID)) {
+            player.sendMessage(plugin.getMessage("reseau-chargement"));
+            event.setCancelled(true);
             return;
         }
 

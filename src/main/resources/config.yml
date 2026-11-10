@@ -1,3 +1,24 @@
+# ======================================================================== #
+# SHCooldowns
+#
+# Plugin : cooldowns partagés par groupe de commandes, durée selon la permission, alias de commandes
+# et placeholders. Avec SHNetwork, un cooldown pris sur un serveur bloque aussi la commande sur les autres
+# (voir la section 'reseau' en bas du fichier).
+#
+# Commandes :
+#   /shcooldowns reload   Recharge la configuration (alias : /shc). Les clés de 'reseau' demandent un redémarrage.
+#
+# Permissions :
+#   shcooldowns.admin                 Utiliser /shcooldowns (par défaut : op).
+#   shcooldowns.bypass.<id>           Ignorer le cooldown du groupe <id>.
+#   shcooldowns.bypass.all            Ignorer tous les cooldowns.
+#
+# Placeholder : %shcooldowns_time_<id>% = temps restant du groupe <id> pour le joueur.
+#
+# Le message du mode réseau est dans 'messages.yml'.
+#
+# ======================================================================== #
+
 # Configuration for SHCooldowns
 # Placeholders: %time% for remaining time
 cooldown_message: "&7&l« &6&lSH &7&l» &7Veuillez attendre &6%time% &7avant d'utiliser cette commande à nouveau."
@@ -122,3 +143,19 @@ aliases:
 
 # Message affiché par PAPI lorsque le joueur n'est pas en cooldown pour la commande demandée
 placeholder_ready_message: "Prêt"
+
+# Mode réseau. Actif seulement si SHNetwork est installé et 'actif' vaut true : les cooldowns sont alors écrits
+# dans la base partagée (table shcooldowns : uuid, id, expiry) et relus à l'arrivée du joueur sur un serveur.
+# Sans SHNetwork, rien de ceci n'est utilisé. Demande un redémarrage.
+reseau:
+  actif: true
+  # Durée maximale, en secondes, pendant laquelle on attend que l'autre serveur ait fini de sauvegarder
+  # le joueur avant de relire ses cooldowns
+  attente-max-secondes: 10
+  base-de-donnees:
+    url: "jdbc:mariadb://127.0.0.1:3306/bo_net"
+    utilisateur: shcooldowns
+    mot-de-passe: CHANGE_ME
+    # Délai maximal de connexion et de réponse de la base, en millisecondes. Une base qui ne répond pas
+    # laisse le joueur utiliser ses commandes avec les cooldowns de ce serveur.
+    delai-ms: 3000

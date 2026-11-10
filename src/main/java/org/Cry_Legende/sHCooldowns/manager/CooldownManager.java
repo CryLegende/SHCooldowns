@@ -18,9 +18,38 @@ public class CooldownManager {
     private final SHCooldowns plugin; // Ajout d'une référence au plugin pour le logger
     // Stocke les cooldowns actifs : UUID Joueur -> Map<Cooldown ID, Timestamp Fin Cooldown>
     private final Map<UUID, Map<String, Long>> activeCooldowns = new ConcurrentHashMap<>();
+    // Mode réseau : prévenu de chaque cooldown posé pour l'écrire en base. Nul sur un serveur seul.
+    private volatile Sink sink;
+
+    /** Reçoit chaque cooldown posé (mode réseau). Ne doit jamais bloquer : appelé depuis le fil principal. */
+    public interface Sink {
+        void onSet(UUID playerUUID, String cooldownId, long expiryTime);
+    }
 
     public CooldownManager(SHCooldowns plugin) { // Modifier le constructeur
         this.plugin = plugin;
+    }
+
+    public void setSink(Sink sink) {
+        this.sink = sink;
+    }
+
+    /**
+     * Ajoute des cooldowns venus d'un autre serveur : pour chaque identifiant, l'échéance la plus tardive est gardée.
+     *
+     * @param cooldowns identifiant -> échéance
+     */
+    public void merge(UUID playerUUID, Map<String, Long> cooldowns) {
+        long now = System.currentTimeMillis();
+        for (Map.Entry<String, Long> entry : cooldowns.entrySet()) {
+            if (entry.getValue() <= now) continue;
+            String idLower = entry.getKey().toLowerCase(Locale.ROOT);
+            activeCooldowns.compute(playerUUID, (k, map) -> {
+                if (map == null) map = new ConcurrentHashMap<>();
+                map.merge(idLower, entry.getValue(), Math::max);
+                return map;
+            });
+        }
     }
 
 
@@ -43,6 +72,9 @@ public class CooldownManager {
             map.put(idLower, expiryTime);
             return map;
         });
+
+        Sink network = sink;
+        if (network != null) network.onSet(playerUUID, idLower, expiryTime);
     }
 
     /**

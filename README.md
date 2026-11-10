@@ -20,7 +20,18 @@ Utilisé sur : **Opale**.
 
 ## Dépendances
 
-- Optionnelles : `PlaceholderAPI`
+- Optionnelles : `PlaceholderAPI`, `SHNetwork` (mode réseau)
+
+## Mode réseau
+
+Avec **SHNetwork** installé (et `reseau.actif: true`, valeur par défaut), plusieurs serveurs de jeu partagent les cooldowns :
+
+- chaque cooldown posé est écrit en MariaDB (table `shcooldowns` : `uuid`, `id`, `expiry`), sur un fil à part ;
+- au départ d'un joueur, SHNetwork attend que ces écritures soient finies ;
+- à son arrivée sur l'autre serveur, ses cooldowns sont relus en base et fusionnés avec ceux de la mémoire (l'échéance la plus tardive gagne), si bien qu'un `/fix` pris sur un serveur reste bloqué sur l'autre ;
+- le temps de cette relecture, les commandes soumises à un cooldown sont refusées avec le message `reseau-chargement`.
+
+Sans SHNetwork, ou sans les clés `reseau` dans la configuration, le plugin se comporte comme avant : cooldowns locaux, fichier `cooldowns_data.yml`. Si la base est injoignable, le joueur garde les cooldowns de son serveur. La table se crée toute seule au démarrage, ou à la main avec `sql/schema.sql`.
 
 ## Commandes
 
@@ -42,7 +53,8 @@ Fichiers par défaut repris du serveur (secrets remplacés par `CHANGE_ME`). Cli
 
 <pre>
 plugins/SHCooldowns/
-└── <a href="src/main/resources/config.yml">config.yml</a>
+├── <a href="src/main/resources/config.yml">config.yml</a>
+└── <a href="src/main/resources/messages.yml">messages.yml</a>
 </pre>
 
 ## Compilation

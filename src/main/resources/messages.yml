@@ -1,0 +1,5 @@
+# Messages de SHCooldowns affichés aux joueurs. Couleurs avec &.
+
+# Mode réseau (SHNetwork) : commande soumise à un cooldown utilisée pendant que les cooldowns du joueur
+# sont relus en base, juste après son arrivée sur le serveur.
+reseau-chargement: "&7&l« &e&lSH &8&l» &7Tes &edélais de commandes &7sont en cours de chargement, réessaie dans un instant."
