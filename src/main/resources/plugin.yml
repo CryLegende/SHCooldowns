@@ -14,13 +14,24 @@ libraries:
 commands:
   shcooldowns:
     description: Commandes administratives pour SHCooldowns.
-    usage: /shcooldowns reload
-    aliases: [shc]
-    permission: shcooldowns.admin
+    usage: /shcooldowns <reload|info|reset>
 
 permissions:
   shcooldowns.admin:
-    description: Permet d'utiliser les commandes de gestion SHCooldowns.
+    description: Toute l'administration de SHCooldowns
+    default: op
+    children:
+      shcooldowns.admin.reload: true
+      shcooldowns.admin.info: true
+      shcooldowns.admin.reset: true
+  shcooldowns.admin.reload:
+    description: Recharger config.yml et messages.yml
+    default: op
+  shcooldowns.admin.info:
+    description: Consulter les cooldowns actifs d'un joueur
+    default: op
+  shcooldowns.admin.reset:
+    description: Retirer un cooldown (ou tous) d'un joueur
     default: op
   shcooldowns.bypass.<cooldown_id>: # Ex: shcooldowns.bypass.repair
     description: Permet de contourner un cooldown spécifique (utiliser l'id du config).

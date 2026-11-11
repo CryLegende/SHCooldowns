@@ -24,6 +24,10 @@ public class CooldownManager {
     /** Reçoit chaque cooldown posé (mode réseau). Ne doit jamais bloquer : appelé depuis le fil principal. */
     public interface Sink {
         void onSet(UUID playerUUID, String cooldownId, long expiryTime);
+
+        /** Un cooldown (ou tous si cooldownId est nul) a été retiré par un administrateur. */
+        default void onClear(UUID playerUUID, String cooldownId) {
+        }
     }
 
     public CooldownManager(SHCooldowns plugin) { // Modifier le constructeur
@@ -75,6 +79,47 @@ public class CooldownManager {
 
         Sink network = sink;
         if (network != null) network.onSet(playerUUID, idLower, expiryTime);
+    }
+
+    /** Cooldowns actifs d'un joueur (id -> échéance), triés par id. */
+    public Map<String, Long> getActive(UUID playerUUID) {
+        Map<String, Long> active = new java.util.TreeMap<>();
+        Map<String, Long> playerCooldowns = activeCooldowns.get(playerUUID);
+        if (playerCooldowns != null) {
+            long now = System.currentTimeMillis();
+            playerCooldowns.forEach((id, expiry) -> {
+                if (expiry > now) {
+                    active.put(id, expiry);
+                }
+            });
+        }
+        return active;
+    }
+
+    /**
+     * Retire le cooldown d'un groupe (ou tous ceux du joueur si cooldownId est nul), en mémoire et, en mode réseau,
+     * en base.
+     *
+     * @return le nombre de cooldowns actifs retirés
+     */
+    public int clear(UUID playerUUID, String cooldownId) {
+        String idLower = cooldownId == null ? null : cooldownId.toLowerCase(Locale.ROOT);
+        long now = System.currentTimeMillis();
+        int[] removed = {0};
+        activeCooldowns.computeIfPresent(playerUUID, (k, map) -> {
+            if (idLower == null) {
+                removed[0] = (int) map.values().stream().filter(expiry -> expiry > now).count();
+                return null;
+            }
+            Long expiry = map.remove(idLower);
+            if (expiry != null && expiry > now) {
+                removed[0]++;
+            }
+            return map.isEmpty() ? null : map;
+        });
+        Sink network = sink;
+        if (network != null) network.onClear(playerUUID, idLower);
+        return removed[0];
     }
 
     /**

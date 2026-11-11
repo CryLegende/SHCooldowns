@@ -1,6 +1,6 @@
 package org.Cry_Legende.sHCooldowns;
 
-import org.Cry_Legende.sHCooldowns.command.ReloadCommand;
+import org.Cry_Legende.sHCooldowns.command.AdminCommand;
 import org.Cry_Legende.sHCooldowns.config.ConfigManager;
 import org.Cry_Legende.sHCooldowns.listener.PlayerCommandListener;
 import org.Cry_Legende.sHCooldowns.manager.CooldownManager;
@@ -11,13 +11,17 @@ import org.Cry_Legende.sHCooldowns.network.ShNetworkLink;
 import org.Cry_Legende.sHCooldowns.placeholder.CooldownPlaceholder;
 import org.Cry_Legende.sHCooldowns.util.FormatUtil;
 import org.bukkit.Bukkit;
+import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File; // Nouvel import
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.logging.Level;
 
@@ -63,8 +67,9 @@ public final class SHCooldowns extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new PlayerCommandListener(this, configManager, cooldownManager), this);
 
         // Enregistrer les commandes
-        Objects.requireNonNull(getCommand("shcooldowns"), "La commande shcooldowns n'est pas enregistrée dans plugin.yml !")
-            .setExecutor(new ReloadCommand(this, configManager));
+        AdminCommand admin = new AdminCommand(this);
+        Objects.requireNonNull(getCommand("shcooldowns"), "La commande shcooldowns n'est pas enregistrée dans plugin.yml !").setExecutor(admin);
+        getCommand("shcooldowns").setTabCompleter(admin);
 
 
         // Intégration PlaceholderAPI (optionnelle)
@@ -136,21 +141,76 @@ public final class SHCooldowns extends JavaPlugin {
         }
     }
 
-    /** messages.yml, avec les valeurs du jar pour toute clé absente du fichier du serveur. */
-    private void loadMessages() {
+    /** messages.yml lu sans rien appliquer, avec les valeurs du jar pour toute clé absente du fichier du serveur. */
+    private YamlConfiguration readMessages() throws IOException, InvalidConfigurationException {
         File file = new File(getDataFolder(), "messages.yml");
         if (!file.exists()) saveResource("messages.yml", false);
-        messages = YamlConfiguration.loadConfiguration(file);
+        YamlConfiguration yaml = new YamlConfiguration();
+        yaml.load(file);
         try (InputStreamReader defaults = new InputStreamReader(Objects.requireNonNull(getResource("messages.yml")), StandardCharsets.UTF_8)) {
-            messages.setDefaults(YamlConfiguration.loadConfiguration(defaults));
+            yaml.setDefaults(YamlConfiguration.loadConfiguration(defaults));
+        }
+        return yaml;
+    }
+
+    private void loadMessages() {
+        try {
+            messages = readMessages();
         } catch (Exception e) {
-            getLogger().log(Level.WARNING, "messages.yml de référence illisible : " + e.getMessage());
+            getLogger().log(Level.SEVERE, "messages.yml illisible, textes par défaut utilisés : " + e.getMessage());
+            messages = new YamlConfiguration();
+            try (InputStreamReader defaults = new InputStreamReader(Objects.requireNonNull(getResource("messages.yml")), StandardCharsets.UTF_8)) {
+                messages.setDefaults(YamlConfiguration.loadConfiguration(defaults));
+            } catch (Exception ignored) {
+            }
         }
     }
 
-    /** Texte de messages.yml, couleurs appliquées. */
-    public String getMessage(String key) {
-        return FormatUtil.colorize(messages.getString(key, key));
+    /**
+     * Relit config.yml et messages.yml. Les deux sont d'abord lus à part : si l'un est illisible, rien ne change.
+     * Les cooldowns en cours (cooldowns_data.yml, base) ne sont pas touchés ; les clés de 'reseau' demandent un redémarrage.
+     *
+     * @return une entrée « fichier\nerreur » par fichier illisible, vide si tout a été rechargé
+     */
+    public List<String> reloadAll() {
+        List<String> errors = new ArrayList<>();
+        YamlConfiguration newMessages = null;
+        try {
+            newMessages = readMessages();
+        } catch (IOException | InvalidConfigurationException e) {
+            String reason = String.valueOf(e.getMessage()).strip();
+            int newline = reason.indexOf('\n');
+            errors.add("messages.yml\n" + (newline < 0 ? reason : reason.substring(0, newline)));
+        }
+        // config.yml est vérifié en dernier : il n'est appliqué que si messages.yml est lisible aussi
+        if (errors.isEmpty()) {
+            String configError = configManager.reload();
+            if (configError != null) {
+                errors.add(configError);
+            }
+        } else {
+            YamlConfiguration probe = new YamlConfiguration();
+            try {
+                probe.load(new File(getDataFolder(), "config.yml"));
+            } catch (IOException | InvalidConfigurationException e) {
+                String reason = String.valueOf(e.getMessage()).strip();
+                int newline = reason.indexOf('\n');
+                errors.add("config.yml\n" + (newline < 0 ? reason : reason.substring(0, newline)));
+            }
+        }
+        if (errors.isEmpty()) {
+            messages = newMessages;
+        }
+        return errors;
+    }
+
+    /** Texte de messages.yml, couleurs appliquées et variables remplacées (paires « %nom% », « valeur »). */
+    public String getMessage(String key, String... placeholders) {
+        String text = messages.getString(key, key);
+        for (int i = 0; i + 1 < placeholders.length; i += 2) {
+            text = text.replace(placeholders[i], placeholders[i + 1]);
+        }
+        return FormatUtil.colorize(text);
     }
 
     /** Mode réseau actif, ou null sur un serveur seul. */

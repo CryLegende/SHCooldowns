@@ -1,22 +1,32 @@
 # ======================================================================== #
 # SHCooldowns
 #
-# Plugin : cooldowns partagés par groupe de commandes, durée selon la permission, alias de commandes
-# et placeholders. Avec SHNetwork, un cooldown pris sur un serveur bloque aussi la commande sur les autres
-# (voir la section 'reseau' en bas du fichier).
+# Plugin : cooldowns partagés par groupe de commandes, durée selon la permission, alias de commandes et placeholders.
+# Avec SHNetwork, un cooldown pris sur un serveur bloque aussi la commande sur les autres (voir la section 'reseau'
+# en bas du fichier).
 #
-# Commandes :
-#   /shcooldowns reload   Recharge la configuration (alias : /shc). Les clés de 'reseau' demandent un redémarrage.
+# Commande (alias : aucun) :
+#   /shcooldowns reload                 Relit ce fichier et messages.yml. Un fichier illisible ne change rien. Les
+#                                       cooldowns en cours sont conservés ; les clés de 'reseau' demandent un redémarrage.
+#   /shcooldowns info <joueur>          Cooldowns actifs d'un joueur (joueur connecté ou UUID) et temps restant.
+#   /shcooldowns reset <joueur> [id|all]  Retire le cooldown d'un groupe, ou tous sans id (en mode réseau, aussi en base).
 #
 # Permissions :
-#   shcooldowns.admin                 Utiliser /shcooldowns (par défaut : op).
-#   shcooldowns.bypass.<id>           Ignorer le cooldown du groupe <id>.
+#   shcooldowns.admin                 Toutes les sous-commandes (par défaut : op).
+#   shcooldowns.admin.reload          /shcooldowns reload
+#   shcooldowns.admin.info            /shcooldowns info
+#   shcooldowns.admin.reset           /shcooldowns reset
+#   shcooldowns.bypass.<id>           Ignorer le cooldown du groupe <id> (par exemple shcooldowns.bypass.repair).
 #   shcooldowns.bypass.all            Ignorer tous les cooldowns.
+#   permission: d'une entrée          Durée réservée aux joueurs qui ont ce nœud (par exemple shcooldowns.repairvip).
 #
 # Placeholder : %shcooldowns_time_<id>% = temps restant du groupe <id> pour le joueur.
 #
-# Le message du mode réseau est dans 'messages.yml'.
+# cooldown_message : message envoyé pendant un cooldown (%time%). no_permission_message : refus de /shcooldowns.
+# cooldowns.<id>.default / .<palier> : cooldown (durée 24h, 30m, 10s...), shared_commands, permission du palier.
+# aliases : remplace la commande tapée par la cible avant son exécution ('*' en fin d'alias : tous les arguments).
 #
+# Les messages de /shcooldowns et du mode réseau sont dans 'messages.yml'.
 # ======================================================================== #
 
 # Configuration for SHCooldowns

@@ -88,6 +88,19 @@ public final class CooldownDatabase {
         return result;
     }
 
+    /** Supprime les cooldowns d'un joueur : celui d'un groupe, ou tous si id est nul. */
+    public int delete(UUID uuid, String id) throws SQLException {
+        String sql = "DELETE FROM " + TABLE + " WHERE uuid = ?" + (id == null ? "" : " AND id = ?");
+        try (Connection c = pool.getConnection();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setString(1, uuid.toString());
+            if (id != null) {
+                ps.setString(2, id);
+            }
+            return ps.executeUpdate();
+        }
+    }
+
     /** Supprime les cooldowns échus. */
     public int purge(long now) throws SQLException {
         try (Connection c = pool.getConnection();

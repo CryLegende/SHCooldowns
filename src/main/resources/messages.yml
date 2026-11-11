@@ -3,3 +3,20 @@
 # Mode réseau (SHNetwork) : commande soumise à un cooldown utilisée pendant que les cooldowns du joueur
 # sont relus en base, juste après son arrivée sur le serveur.
 reseau-chargement: "&7&l« &e&lSH &8&l» &7Tes &edélais de commandes &7sont en cours de chargement, réessaie dans un instant."
+
+# Commande /shcooldowns
+# Variables : %subcommands% (sous-commandes permises, séparées par |), %player%, %id%, %time%, %count%,
+# %groups% et %aliases% (reload), %file% et %error% (fichier illisible).
+usage: "&7&l« &6&lSH &8&l» &7Utilisation : &6/shcooldowns <%subcommands%>"
+usage-info: "&7&l« &6&lSH &8&l» &7Utilisation : &6/shcooldowns info <joueur>"
+usage-reset: "&7&l« &6&lSH &8&l» &7Utilisation : &6/shcooldowns reset <joueur> [id|all]"
+player-not-found: "&7&l« &c&lSH &8&l» &7Joueur &c%player% &7introuvable : indiquez le nom d'un joueur &cconnecté &7ou un &cUUID&7."
+unknown-id: "&7&l« &c&lSH &8&l» &7Le groupe de cooldown &c%id% &7n'existe pas dans config.yml."
+info-none: "&7&l« &6&lSH &8&l» &b%player% &7n'a aucun cooldown actif."
+info-header: "&7&l« &6&lSH &8&l» &b%player% &7: &6%count% &7cooldown(s) actif(s) :"
+info-entry: "&8• &f%id% &7: encore &6%time%"
+reset-ok: "&7&l« &a&lSH &8&l» &6%count% &7cooldown(s) retiré(s) pour &b%player%&7."
+reset-none: "&7&l« &e&lSH &8&l» &b%player% &7n'avait aucun cooldown à retirer."
+reload-ok: "&7&l« &a&lSH &8&l» &7Configuration &arechargée &7: &a%groups% &7groupe(s), &a%aliases% &7alias."
+reload-network: "&8• &7Les clés de &6reseau &7demandent un redémarrage."
+reload-error: "&7&l« &c&lSH &8&l» &7Rechargement annulé, &crien n'a été changé&7. Fichier &c%file%&7 : &c%error%"

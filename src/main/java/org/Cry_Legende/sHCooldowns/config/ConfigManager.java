@@ -3,8 +3,12 @@ package org.Cry_Legende.sHCooldowns.config;
 import org.Cry_Legende.sHCooldowns.SHCooldowns;
 import org.Cry_Legende.sHCooldowns.util.TimeUtil;
 import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.configuration.file.YamlConfiguration;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -34,10 +38,41 @@ public class ConfigManager {
         loadConfig();
     }
 
+    /** Lecture au démarrage : un fichier illisible est signalé et la configuration reste vide. */
     public void loadConfig() {
         plugin.saveDefaultConfig();
-        plugin.reloadConfig(); // Recharge depuis le disque
-        this.config = plugin.getConfig();
+        YamlConfiguration yaml = new YamlConfiguration();
+        try {
+            yaml.load(new File(plugin.getDataFolder(), "config.yml"));
+        } catch (IOException | InvalidConfigurationException e) {
+            plugin.getLogger().log(Level.SEVERE, "config.yml illisible : " + e.getMessage());
+            yaml = new YamlConfiguration();
+        }
+        plugin.reloadConfig();
+        apply(yaml);
+    }
+
+    /**
+     * Relit config.yml sans rien changer tant qu'il est illisible.
+     *
+     * @return null si tout est rechargé, sinon « config.yml\nerreur »
+     */
+    public String reload() {
+        YamlConfiguration yaml = new YamlConfiguration();
+        try {
+            yaml.load(new File(plugin.getDataFolder(), "config.yml"));
+        } catch (IOException | InvalidConfigurationException e) {
+            String reason = String.valueOf(e.getMessage()).strip();
+            int newline = reason.indexOf('\n');
+            return "config.yml\n" + (newline < 0 ? reason : reason.substring(0, newline));
+        }
+        plugin.reloadConfig();
+        apply(yaml);
+        return null;
+    }
+
+    private void apply(FileConfiguration config) {
+        this.config = config;
 
         // Effacer les anciennes données avant de recharger
         cooldownGroups.clear();
@@ -173,7 +208,7 @@ public class ConfigManager {
             plugin.getLogger().warning("Section 'aliases' non trouvée ou vide dans config.yml.");
         }
 
-        plugin.getLogger().info("Configuration rechargée. " + cooldownGroups.size() + " groupe(s) de cooldowns et " + aliases.size() + " alias chargés.");
+        plugin.getLogger().info("Configuration chargée. " + cooldownGroups.size() + " groupe(s) de cooldowns et " + aliases.size() + " alias chargés.");
     }
 
     // Méthode privée pour l'interface de la fonction de chargement
@@ -301,6 +336,19 @@ public class ConfigManager {
         return null; // Aucun alias trouvé
     }
 
+
+    /** Identifiants des groupes de cooldown, en minuscules. */
+    public java.util.Set<String> getGroupIds() {
+        return new java.util.TreeSet<>(cooldownGroups.keySet());
+    }
+
+    public int getGroupCount() {
+        return cooldownGroups.size();
+    }
+
+    public int getAliasCount() {
+        return aliases.size();
+    }
 
     public String getCooldownMessage() {
         return cooldownMessage;

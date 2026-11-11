@@ -107,6 +107,17 @@ public final class NetworkCooldowns implements Listener, CooldownManager.Sink {
         submit(() -> write(uuid, id, expiry));
     }
 
+    @Override
+    public void onClear(UUID uuid, String id) {
+        submit(() -> {
+            try {
+                db.delete(uuid, id);
+            } catch (SQLException e) {
+                plugin.getLogger().log(Level.WARNING, "Cooldowns de " + uuid + " non supprimés en base : " + e.getMessage());
+            }
+        });
+    }
+
     @EventHandler(priority = EventPriority.LOWEST)
     public void onJoin(PlayerJoinEvent event) {
         beginLoad(event.getPlayer().getUniqueId());

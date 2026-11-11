@@ -37,15 +37,27 @@ Sans SHNetwork, ou sans les clés `reseau` dans la configuration, le plugin se c
 
 | Commande | Alias | Description | Permission |
 |---|---|---|---|
-| `/shcooldowns` | `/shc` | Commandes administratives pour SHCooldowns. | `shcooldowns.admin` |
+| `/shcooldowns reload` | — | Relit `config.yml` et `messages.yml`. Un fichier illisible ne change rien ; les cooldowns en cours sont conservés. | `shcooldowns.admin.reload` |
+| `/shcooldowns info <joueur>` | — | Cooldowns actifs d'un joueur (connecté, ou par UUID) et temps restant. | `shcooldowns.admin.info` |
+| `/shcooldowns reset <joueur> [id\|all]` | — | Retire le cooldown d'un groupe, ou tous sans id (en mode réseau, aussi en base). | `shcooldowns.admin.reset` |
+
+Sans argument, ou avec une sous-commande inconnue, une ligne d'usage ne liste que les sous-commandes permises à l'expéditeur. Les trois sous-commandes marchent depuis la console.
 
 ## Permissions
 
 | Permission | Description | Par défaut |
 |---|---|---|
-| `shcooldowns.admin` | Permet d'utiliser les commandes de gestion SHCooldowns. | `op` |
-| `shcooldowns.bypass.<cooldown_id>` | Permet de contourner un cooldown spécifique (utiliser l'id du config). | `false` |
-| `shcooldowns.bypass.all` | Permet de contourner tous les cooldowns SHCooldowns. | `false` |
+| `shcooldowns.admin` | Toute l'administration (parent des trois nœuds suivants). | `op` |
+| `shcooldowns.admin.reload` | Recharger la configuration. | `op` |
+| `shcooldowns.admin.info` | Consulter les cooldowns d'un joueur. | `op` |
+| `shcooldowns.admin.reset` | Retirer un cooldown d'un joueur. | `op` |
+| `shcooldowns.bypass.<id>` | Contourner le cooldown du groupe `<id>` (nœud construit à partir de `config.yml`, par exemple `shcooldowns.bypass.repair`). | `op` pour un id réel |
+| `shcooldowns.bypass.all` | Contourner tous les cooldowns. | `false` |
+| `permission:` d'une entrée | Durée réservée aux joueurs qui ont ce nœud (par exemple `shcooldowns.repairvip`). | `op` |
+
+## Alias de commandes
+
+La section `aliases` de `config.yml` remplace une commande tapée par sa cible avant l'exécution (`/ae` devient `/enchanter`...). Ces alias ne sont pas des commandes enregistrées : `/shcooldowns` n'en a aucun.
 
 ## Configuration
 
