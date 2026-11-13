@@ -39,11 +39,11 @@ cooldowns:
   repair:
     # Cooldown appliqué si aucune entrée avec permission correspondante n'est trouvée ou si le joueur n'a pas la permission spécifiée
     default:
-      cooldown: 24h # 24 heures
+      cooldown: 1h # 1 heure
       shared_commands: # Commandes partageant ce cooldown PAR DÉFAUT
         - /fix # Commande de base, correspond aussi à /repair xyz sauf si une règle plus spécifique existe
     # vip:
-    #   cooldown: 12h # 12 heures pour les VIPs
+    #   cooldown: 30m # 30 minutes pour les VIPs
     #   permission: shcooldowns.repairvip # Permission requise pour ce cooldown
     #   shared_commands: # Commandes partageant ce cooldown VIP
     #     - /repair
@@ -56,7 +56,7 @@ cooldowns:
     #     - /efix hand
   repair_all:
     default:
-      cooldown: 72h # 72 heures
+      cooldown: 6h # 6 heures
       shared_commands:
         - /fix *
   kittycannon:
@@ -68,88 +68,9 @@ cooldowns:
 
 aliases:
   # Alias vers Cible (la commande exécutée sera la Cible)
-  '/erepair *': '/dm open repair'
-  '/efix *': '/dm open repair'
-  '/repair *': '/dm open repair'
-
-  '/ci': '/trash'
-  '/clearinventory': '/trash'
-  '/clear': '/trash'
-  '/eci': '/trash'
   '/isgo': '/is go'
-  '/enchant': '/enchanter'
-  '/ce': '/enchanter'
-  '/ae': '/enchanter'
-  '/email': '/mail'
   '/mail read': '/mail'
-  '/mess': '/msg'
-  '/mp': '/msg'
-  '/message': '/msg'
-  '/tell': '/msg'
-  '/ext': '/eext'
-  '/c': '/quest'
-  '/chall': '/quest'
-  '/challenge': '/quest'
-  '/challenges': '/quest'
-  '/mission': '/quest'
-  '/quetes': '/quest'
-  '/col': '/coll'
-  '/vip': '/grades'
-  '/level': '/is level'
-  '/sellhand': '/sell hand'
-  '/is c': '/quest'
-  '/is chall': '/quest'
-  '/is challenge': '/quest'
-  '/is challenges': '/quest'
-  '/is mission': '/quest'
-  '/carg': '/envoy'
-  '/carg ignore': '/envoy ignore'
-  '/elist': '/essentials:list'
   '/pw *': '/is warps'
-  '/pw': '/is warps'
-  '/pweather': '/pweather' #Pour patch l'aliase '/pw *': '/is warps'
-  '/tutoriel': '/warp tutoriel'
-  '/tuto': '/warp tutoriel'
-  '/is value': '/shiv value'
-  '/is values': '/shiv values'
-
-  '/tptoggle': '/shclicktpa:tptoggle'
-  '/etptoggle': '/shclicktpa:tptoggle'
-  '/tps': '/shcustoms:tps'
-
-  # '/is warps *': '/swg *'
-  # '/island warps *': '/swg *'
-  # '/is warp *': '/swg *'
-  # '/island warp *': '/swg *'
-  # '/is editwarp *': '/swg edit *'
-  # '/island editwarp *': '/swg edit *'
-
-  '/is cp': '/is'
-  '/island cp': '/is'
-  '/islands cp': '/is'
-  '/is manager': '/is'
-  '/island manager': '/is'
-  '/islands manager': '/is'
-  '/island panel': '/is'
-  '/islands panel': '/is'
-  '/superiorskyblock2:is cp': '/is'
-  '/superiorskyblock2:island cp': '/is'
-  '/superiorskyblock2:islands cp': '/is'
-  '/superiorskyblock2:is manager': '/is'
-  '/superiorskyblock2:island manager': '/is'
-  '/superiorskyblock2:islands manager': '/is'
-  '/superiorskyblock2:is panel': '/is'
-  '/superiorskyblock2:island panel': '/is'
-  '/superiorskyblock2:islands panel': '/is'
-
-  '/invsee': '/inv'
-  #'/box': '/dm open Box'
-
-  '/spy mail': '/shmailadmin spy'
-  '/spy mp': '/spy on'
-  '/shdl': '/shadmin'
-  '/shdiscord': '/shadmin'
-  '/shdiscordlink': '/shadmin'
 
 # Message affiché par PAPI lorsque le joueur n'est pas en cooldown pour la commande demandée
 placeholder_ready_message: "Prêt"
@@ -163,8 +84,8 @@ reseau:
   # le joueur avant de relire ses cooldowns
   attente-max-secondes: 10
   base-de-donnees:
-    url: "jdbc:mariadb://127.0.0.1:3306/bo_net"
-    utilisateur: shcooldowns
+    url: "jdbc:mariadb://127.0.0.1:3306/minecraft"
+    utilisateur: minecraft
     mot-de-passe: CHANGE_ME
     # Délai maximal de connexion et de réponse de la base, en millisecondes. Une base qui ne répond pas
     # laisse le joueur utiliser ses commandes avec les cooldowns de ce serveur.
