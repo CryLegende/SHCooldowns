@@ -74,11 +74,9 @@ public final class SHCooldowns extends JavaPlugin {
 
         // Intégration PlaceholderAPI (optionnelle)
         if (Bukkit.getPluginManager().getPlugin("PlaceholderAPI") != null) {
-            getLogger().info("PlaceholderAPI trouvé ! Enregistrement de l'expansion.");
             cooldownPlaceholder = new CooldownPlaceholder(this, configManager, cooldownManager);
             if (cooldownPlaceholder.canRegister()) { // PAPI > 2.9.0
                 cooldownPlaceholder.register();
-                getLogger().info("Expansion PlaceholderAPI enregistrée.");
             } else {
                 getLogger().warning("Impossible d'enregistrer l'expansion PAPI (PAPI < 2.9.0 ou autre problème).");
             }
@@ -87,8 +85,6 @@ public final class SHCooldowns extends JavaPlugin {
             cooldownPlaceholder = null;
         }
 
-        getLogger().info("SHCooldowns activé avec succès !");
-        getLogger().info("Auteur: Cry_Legende");
     }
 
     @Override
@@ -105,13 +101,11 @@ public final class SHCooldowns extends JavaPlugin {
         if (cooldownPlaceholder != null && cooldownPlaceholder.isRegistered()) { // PAPI > 2.9.0
             try {
                 cooldownPlaceholder.unregister();
-                getLogger().info("Expansion PlaceholderAPI désenregistrée.");
             } catch (Exception e) {
                 // Ignore, PAPI est peut-être déjà désactivé.
             }
         }
 
-        getLogger().info("SHCooldowns désactivé.");
     }
 
     /**
